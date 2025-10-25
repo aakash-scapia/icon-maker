@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --scapia-orange: #FF6B35;
+  --scapia-dark: #1a1a1a;
+  --scapia-gray: #6b7280;
 }
 
 @theme inline {
@@ -23,4 +26,65 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Drag and drop styles */
+.drag-over {
+  border-color: var(--scapia-orange) !important;
+  background-color: rgba(255, 107, 53, 0.05) !important;
+}
+
+/* Badge styles */
+.badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Custom button styles */
+.btn-upload {
+  background-color: #3b82f6;
+  color: white;
+  position: relative;
+}
+
+.btn-clear {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-download {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-download-individual {
+  background-color: #374151;
+  color: white;
 }

@@ -303,3 +303,58 @@ export async function iconifyAction(
 
   return { results };
 }
+
+/* ---------- single image action ---------- */
+export async function iconifySingleAction(formData: FormData): Promise<IconifyResult> {
+  // Validate API key
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      name: "error",
+      error: "OpenAI API key not configured. Please check your environment variables."
+    };
+  }
+
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const file = formData.get("image") as File;
+
+  // Handle case where no file is provided
+  if (!file || file.size === 0) {
+    return {
+      name: "error",
+      error: "No image provided. Please select an image to process."
+    };
+  }
+
+  try {
+    // Ensure we pass a real File (Node 18+ provides File via undici)
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = Buffer.from(arrayBuffer);
+    const uploadFile = new File([bytes], file.name || "reference.png", {
+      type: file.type || "image/png"
+    });
+
+    const fullPrompt = [
+      BAKED_PROMPT,
+      "",
+      "Style JSON (do not change):",
+      JSON.stringify(PRESET, null, 2),
+      "",
+      "Requirements:",
+      "- 1024x1024 square",
+      "- transparent background (no text/captions)"
+    ].join("\n");
+
+    const b64 = await editWithFallbacks(client, uploadFile, fullPrompt);
+
+    return {
+      name: file.name.replace(/\.[^.]+$/, "") + "-icon.png",
+      b64
+    };
+  } catch (e: unknown) {
+    console.error("Error processing file:", file?.name, e);
+    return {
+      name: file?.name?.replace(/\.[^.]+$/, "") + "-icon.png" || "unknown-icon.png",
+      error: e instanceof Error ? e.message : "Failed to process image"
+    };
+  }
+}
