@@ -179,7 +179,8 @@ async function editWithFallbacks(
 ): Promise<string> {
   // Try 1: with transparent background param (some SDKs/servers accept this)
   try {
-    const r1 = await client.images.edit({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const r1 = await (client.images.edit as any)({
       model: "gpt-image-1",
       prompt: fullPrompt,
       image: [uploadFile],
@@ -188,19 +189,19 @@ async function editWithFallbacks(
      
       background: "transparent",
       n: 1
-    } as any);
+    });
 
-    const b64a = (r1.data?.[0] as any)?.b64_json;
+    const b64a = (r1.data?.[0] as { b64_json?: string })?.b64_json;
     if (b64a) return b64a;
 
-    const urla = (r1.data?.[0] as any)?.url;
+    const urla = (r1.data?.[0] as { url?: string })?.url;
     if (urla) {
       const f = await fetch(urla);
       const buf = Buffer.from(await f.arrayBuffer());
       return buf.toString("base64");
     }
-  } catch (e: any) {
-    const msg = (e?.message || "").toLowerCase();
+  } catch (e: unknown) {
+    const msg = (e instanceof Error ? e.message : "").toLowerCase();
     if (!msg.includes("unknown parameter") && !msg.includes("invalid parameter")) {
       // Rethrow unexpected errors
       throw e;
@@ -216,9 +217,9 @@ async function editWithFallbacks(
     n: 1
   });
 
-  let b64 = (r2.data?.[0] as any)?.b64_json as string | undefined;
+  let b64 = (r2.data?.[0] as { b64_json?: string })?.b64_json as string | undefined;
   if (!b64) {
-    const url = (r2.data?.[0] as any)?.url;
+    const url = (r2.data?.[0] as { url?: string })?.url;
     if (!url) throw new Error("No image returned by API");
     const f = await fetch(url);
     const buf = Buffer.from(await f.arrayBuffer());
@@ -262,10 +263,10 @@ export async function iconifyAction(
         name: f.name.replace(/\.[^.]+$/, "") + "-icon.png",
         b64
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       results.push({
         name: f.name.replace(/\.[^.]+$/, "") + "-icon.png",
-        error: e?.message || "Failed"
+        error: e instanceof Error ? e.message : "Failed"
       });
     }
   }

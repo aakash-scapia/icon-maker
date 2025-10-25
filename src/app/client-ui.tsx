@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import Image from "next/image";
 import type { IconifyState, IconifyResult } from "./actions/iconify";
 
 type Props = {
@@ -22,7 +23,7 @@ function SubmitButton() {
 }
 
 export default function ClientUI({ action }: Props) {
-  const [state, formAction, isPending] =
+  const [state, formAction] =
     useActionState<IconifyState, FormData>(action, { results: [] });
 
   return (
@@ -49,9 +50,11 @@ export default function ClientUI({ action }: Props) {
                 <div className="text-red-600 text-sm">{r.error}</div>
               ) : (
                 <>
-                  <img
+                  <Image
                     src={`data:image/png;base64,${r.b64}`}
                     alt={`Generated icon ${r.name}`}
+                    width={96}
+                    height={96}
                     className="w-24 h-24 object-contain mb-2 mx-auto"
                   />
                   <a
