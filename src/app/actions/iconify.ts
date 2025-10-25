@@ -233,12 +233,41 @@ export async function iconifyAction(
   _prevState: IconifyState,
   formData: FormData
 ): Promise<IconifyState> {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  // Validate API key
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      results: [{
+        name: "error",
+        error: "OpenAI API key not configured. Please check your environment variables."
+      }]
+    };
+  }
+
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const files = formData.getAll("images") as File[];
   const results: IconifyResult[] = [];
 
+  // Handle case where no files are provided
+  if (!files || files.length === 0) {
+    return {
+      results: [{
+        name: "error", 
+        error: "No images provided. Please select at least one image to process."
+      }]
+    };
+  }
+
   for (const f of files) {
     try {
+      // Validate file
+      if (!f || f.size === 0) {
+        results.push({
+          name: f?.name || "unknown",
+          error: "Invalid or empty file"
+        });
+        continue;
+      }
+
       // Ensure we pass a real File (Node 18+ provides File via undici)
       const arrayBuffer = await f.arrayBuffer();
       const bytes = Buffer.from(arrayBuffer);
@@ -264,9 +293,10 @@ export async function iconifyAction(
         b64
       });
     } catch (e: unknown) {
+      console.error("Error processing file:", f?.name, e);
       results.push({
-        name: f.name.replace(/\.[^.]+$/, "") + "-icon.png",
-        error: e instanceof Error ? e.message : "Failed"
+        name: f?.name?.replace(/\.[^.]+$/, "") + "-icon.png" || "unknown-icon.png",
+        error: e instanceof Error ? e.message : "Failed to process image"
       });
     }
   }
